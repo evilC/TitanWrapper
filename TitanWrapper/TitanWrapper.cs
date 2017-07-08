@@ -58,25 +58,6 @@ namespace TitanWrapper
             { TitanOne.InputType.XB360, new Dictionary<int, int>() },
         };
 
-        public static readonly Dictionary<TitanOne.OutputType, TitanOne.InputType> outputToInputType = new Dictionary<TitanOne.OutputType, TitanOne.InputType>()
-        {
-            {TitanOne.OutputType.None, TitanOne.InputType.None },
-            {TitanOne.OutputType.PS3, TitanOne.InputType.PS3 },
-            {TitanOne.OutputType.PS4, TitanOne.InputType.PS4 },
-            {TitanOne.OutputType.XB360, TitanOne.InputType.XB360 },
-            {TitanOne.OutputType.XB1, TitanOne.InputType.XB1 },
-        };
-
-        public static readonly Dictionary<TitanOne.InputType, TitanOne.OutputType> inputToOutputType = new Dictionary<TitanOne.InputType, TitanOne.OutputType>()
-        {
-            {TitanOne.InputType.None, TitanOne.OutputType.None },
-            {TitanOne.InputType.PS3, TitanOne.OutputType.PS3 },
-            {TitanOne.InputType.PS4, TitanOne.OutputType.PS4 },
-            {TitanOne.InputType.XB360, TitanOne.OutputType.XB360 },
-            {TitanOne.InputType.XB1, TitanOne.OutputType.XB1 },
-            {TitanOne.InputType.WII, TitanOne.OutputType.None },
-        };
-
         public Wrapper()
         {
             titanOneApi = new TitanOneApi.TitanOne(new Action<int, int>(SlotChanged));
@@ -97,7 +78,7 @@ namespace TitanWrapper
                 {
                     try
                     {
-                        var iType = outputToInputType[type.Key];
+                        var iType = TitanOne.outputToInputType[type.Key];
                         ReverseButtonMappings[iType][buttonMapping.Value] = buttonMapping.Key;
                     }
                     catch

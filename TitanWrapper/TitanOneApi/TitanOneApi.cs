@@ -33,7 +33,26 @@ namespace TitanWrapper.TitanOneApi
         bool threadRunning = false;
 
         private GCMAPIStatus[] inputState = new GCMAPIStatus[30];
-        private sbyte[] outputState = new sbyte[TitanOne.GCMAPIConstants.Output];
+        private sbyte[] outputState = new sbyte[GCMAPIConstants.Output];
+
+        public static readonly Dictionary<OutputType, InputType> outputToInputType = new Dictionary<OutputType, InputType>()
+        {
+            {OutputType.None, InputType.None },
+            {OutputType.PS3, InputType.PS3 },
+            {OutputType.PS4, InputType.PS4 },
+            {OutputType.XB360, InputType.XB360 },
+            {OutputType.XB1, InputType.XB1 },
+        };
+
+        public static readonly Dictionary<InputType, OutputType> inputToOutputType = new Dictionary<InputType, OutputType>()
+        {
+            {InputType.None, OutputType.None },
+            {InputType.PS3, OutputType.PS3 },
+            {InputType.PS4, OutputType.PS4 },
+            {InputType.XB360, OutputType.XB360 },
+            {InputType.XB1, OutputType.XB1 },
+            {InputType.WII, OutputType.None },
+        };
 
         public GCDAPI_Load Load;
         public GCDAPI_Unload Unload;
@@ -155,7 +174,7 @@ namespace TitanWrapper.TitanOneApi
 
         private void TitanWatcher()
         {
-            TitanOne.GCMAPIReport report = new TitanOne.GCMAPIReport();
+            GCMAPIReport report = new GCMAPIReport();
 
             while (threadRunning)
             {
@@ -170,7 +189,7 @@ namespace TitanWrapper.TitanOneApi
                         }
                     }
 
-                    for (byte slot = 0; slot < TitanOne.GCMAPIConstants.Input; slot++)
+                    for (byte slot = 0; slot < GCMAPIConstants.Input; slot++)
                     {
                         sbyte value = report.Input[slot].Value;
 
