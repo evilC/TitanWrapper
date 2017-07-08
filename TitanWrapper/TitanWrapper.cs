@@ -74,12 +74,29 @@ namespace TitanWrapper
                     { 13, 0 },
                 }
             },
+
+            { TitanOne.OutputType.XB1, new Dictionary<int, int>()
+                {
+                    { 1, 19 },
+                    { 2, 18 },
+                    { 3, 20 },
+                    { 4, 17 },
+                    { 5, 6 },
+                    { 6, 3 },
+                    { 9, 8 },
+                    { 10, 5 },
+                    { 11, 1 },
+                    { 12, 2 },
+                    { 13, 0 },
+                }
+            },
         };
 
         private static readonly Dictionary<TitanOne.InputType, Dictionary<int, int>> ReverseButtonMappings = new Dictionary<TitanOne.InputType, Dictionary<int, int>>() {
             { TitanOne.InputType.PS3, new Dictionary<int, int>() },
             { TitanOne.InputType.PS4, new Dictionary<int, int>() },
             { TitanOne.InputType.XB360, new Dictionary<int, int>() },
+            { TitanOne.InputType.XB1, new Dictionary<int, int>() },
         };
 
         #endregion
@@ -124,12 +141,24 @@ namespace TitanWrapper
                     { 6, 4 },
                 }
             },
+
+            { TitanOne.OutputType.XB1, new Dictionary<int, int>()
+                {
+                    { 1, 11 },
+                    { 2, 12 },
+                    { 3, 9 },
+                    { 4, 10 },
+                    { 5, 7 },
+                    { 6, 4 },
+                }
+            },
         };
 
         private static readonly Dictionary<TitanOne.InputType, Dictionary<int, int>> ReverseAxisMappings = new Dictionary<TitanOne.InputType, Dictionary<int, int>>() {
             { TitanOne.InputType.PS3, new Dictionary<int, int>() },
             { TitanOne.InputType.PS4, new Dictionary<int, int>() },
             { TitanOne.InputType.XB360, new Dictionary<int, int>() },
+            { TitanOne.InputType.XB1, new Dictionary<int, int>() },
         };
         #endregion
         #endregion
