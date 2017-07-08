@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -7,6 +8,41 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+/*
+Identifier List
+
+0   PS4_PS        PS3_PS        XB1_XBOX   XB360_XBOX   WII_HOME   WII_HOME
+1   PS4_SHARE     PS3_SELECT    XB1_VIEW   XB360_BACK   WII_MINUS  WII_MINUS
+2   PS4_OPTIONS   PS3_START     XB1_MENU   XB360_START  WII_PLUS   WII_PLUS
+3   PS4_R1        PS3_R1        XB1_RB     XB360_RB                WII_RT
+4   PS4_R2        PS3_R2        XB1_RT     XB360_RT                WII_ZR
+5   PS4_R3        PS3_R3        XB1_RS     XB360_RS     WII_ONE
+6   PS4_L1        PS3_L1        XB1_LB     XB360_LB     WII_C      WII_LT
+7   PS4_L2        PS3_L2        XB1_LT     XB360_LT     WII_Z      WII_ZL
+8   PS4_L3        PS3_L3        XB1_LS     XB360_LS     WII_TWO
+9   PS4_RX        PS3_RX        XB1_RX     XB360_RX                WII_RX
+10  PS4_RY        PS3_RY        XB1_RY     XB360_RY                WII_RY
+11  PS4_LX        PS3_LX        XB1_LX     XB360_LX     WII_NX     WII_LX
+12  PS4_LY        PS3_LY        XB1_LY     XB360_LY     WII_NY     WII_LY
+13  PS4_UP        PS3_UP        XB1_UP     XB360_UP     WII_UP     WII_UP
+14  PS4_DOWN      PS3_DOWN      XB1_DOWN   XB360_DOWN   WII_DOWN   WII_DOWN
+15  PS4_LEFT      PS3_LEFT      XB1_LEFT   XB360_LEFT   WII_LEFT   WII_LEFT
+16  PS4_RIGHT     PS3_RIGHT     XB1_RIGHT  XB360_RIGHT  WII_RIGHT  WII_RIGHT
+17  PS4_TRIANGLE  PS3_TRIANGLE  XB1_Y      XB360_Y                 WII_X
+18  PS4_CIRCLE    PS3_CIRCLE    XB1_B      XB360_B      WII_B      WII_B
+19  PS4_CROSS     PS3_CROSS     XB1_A      XB360_A      WII_A      WII_A
+20  PS4_SQUARE    PS3_SQUARE    XB1_X      XB360_X                 WII_Y
+21  PS4_ACCX      PS3_ACCX                              WII_ACCX
+22  PS4_ACCY      PS3_ACCY                              WII_ACCY
+23  PS4_ACCZ      PS3_ACCZ                              WII_ACCZ
+24  PS4_GYROX     PS3_GYRO
+25  PS4_GYROY                                           WII_ACCNX
+26  PS4_GYROZ                                           WII_ACCNY
+27  PS4_TOUCH                                           WII_ACCNZ
+28  PS4_TOUCHX                                          WII_IRX
+29  PS4_TOUCHY                                          WII_IRY
+
+*/
 namespace TitanWrapper.TitanOneApi
 {
     public class TitanOne
@@ -31,6 +67,12 @@ namespace TitanWrapper.TitanOneApi
         dynamic callback;
         private Thread titanWatcher;
         bool threadRunning = false;
+
+        private InputType inputType = InputType.None;
+        public InputType CurrentInputType { get { return inputType ; } }
+
+        private OutputType outputType = OutputType.None;
+        public OutputType CurrentOutputType { get { return outputType; } }
 
         private GCMAPIStatus[] inputState = new GCMAPIStatus[30];
         private sbyte[] outputState = new sbyte[GCMAPIConstants.Output];
@@ -138,7 +180,21 @@ namespace TitanWrapper.TitanOneApi
                 titanWatcher.Start();
             }
 
+            RefreshControllerTypes();
+
             return functionsLoaded;
+        }
+
+        public void RefreshControllerTypes()
+        {
+            Stopwatch watch = new Stopwatch();
+            while ((outputType == TitanOne.OutputType.None || inputType == TitanOne.InputType.None) && watch.ElapsedMilliseconds < 3000)
+            {
+                var report = GetReport();
+                inputType = GetInputType();
+                outputType = GetOutputType();
+                Thread.Sleep(10);
+            }
         }
 
         public bool SetOutputIdentifier(int identifier, int state)

@@ -10,11 +10,13 @@ namespace TitanWrapper
     {
         TitanOneApi.TitanOne titanOneApi;
 
+        #region Fields and Properties
+
+        #region Callbacks
         private Dictionary<int, Dictionary<string, dynamic>> buttonCallbacks = new Dictionary<int, Dictionary<string, dynamic>>();
+        private Dictionary<int, Dictionary<string, dynamic>> axisCallbacks = new Dictionary<int, Dictionary<string, dynamic>>();
+        #endregion
 
-        private TitanOne.InputType inputType = TitanOne.InputType.None;
-
-        private TitanOne.OutputType outputType = TitanOne.OutputType.None;
 
         public static readonly Dictionary<TitanOne.OutputType, Dictionary<int, int>> ButtonMappings = new Dictionary<TitanOne.OutputType, Dictionary<int, int>>()
         {
@@ -58,6 +60,44 @@ namespace TitanWrapper
             { TitanOne.InputType.XB360, new Dictionary<int, int>() },
         };
 
+        public static readonly Dictionary<TitanOne.OutputType, Dictionary<int, int>> AxisMappings = new Dictionary<TitanOne.OutputType, Dictionary<int, int>>()
+        {
+            { TitanOne.OutputType.PS3, new Dictionary<int, int>()
+                {
+                    { 1, 19 },
+                    { 2, 18 },
+                    { 3, 20 },
+                    { 4, 17 },
+                    { 5, 6 },
+                    { 6, 3 },
+                    { 7, 7 },
+                    { 8, 4 },
+                    { 9, 8 },
+                    { 10, 5 },
+                    { 11, 1 },
+                    { 12, 2 },
+                    { 13, 0 },
+                }
+            },
+
+            { TitanOne.OutputType.XB360, new Dictionary<int, int>()
+                {
+                    { 1, 11 },
+                    { 2, 12 },
+                    { 3, 9 },
+                    { 4, 10 },
+                    { 5, 7 },
+                    { 6, 4 },
+                }
+            },
+        };
+
+        public static readonly Dictionary<TitanOne.InputType, Dictionary<int, int>> ReverseAxisMappings = new Dictionary<TitanOne.InputType, Dictionary<int, int>>() {
+            { TitanOne.InputType.PS3, new Dictionary<int, int>() },
+            { TitanOne.InputType.XB360, new Dictionary<int, int>() },
+        };
+        #endregion
+
         public Wrapper()
         {
             titanOneApi = new TitanOne(new Action<int, int>(IdentifierChanged));
@@ -72,6 +112,27 @@ namespace TitanWrapper
                 throw new Exception("Could not connect to Titan One device");
             }
 
+            CreateReverseMappings();
+
+            var inputType = titanOneApi.CurrentInputType;
+            var outputType = titanOneApi.CurrentOutputType;
+
+            if (inputType == TitanOne.InputType.None && outputType == TitanOne.OutputType.None)
+            {
+                throw new Exception("No input or output devices detected");
+            }
+            if (inputType != TitanOne.InputType.None)
+            {
+                Console.WriteLine(String.Format("Input Type is: {0}", InputTypeToString(inputType)));
+            }
+            if (outputType != TitanOne.OutputType.None)
+            {
+                Console.WriteLine(String.Format("Output Type is: {0}", OutputTypeToString(outputType)));
+            }
+        }
+
+        private void CreateReverseMappings()
+        {
             foreach (var type in ButtonMappings)
             {
                 foreach (var buttonMapping in type.Value)
@@ -88,28 +149,21 @@ namespace TitanWrapper
                 }
             }
 
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
-            while ((outputType == TitanOne.OutputType.None || inputType == TitanOne.InputType.None) && watch.ElapsedMilliseconds < 3000)
+            foreach (var type in AxisMappings)
             {
-                var report = titanOneApi.GetReport();
-                inputType = titanOneApi.GetInputType();
-                outputType = titanOneApi.GetOutputType();
-                Thread.Sleep(10);
-            }
-            watch.Stop();
+                foreach (var axisMapping in type.Value)
+                {
+                    try
+                    {
+                        var iType = TitanOne.outputToInputType[type.Key];
+                        ReverseAxisMappings[iType][axisMapping.Value] = axisMapping.Key;
+                    }
+                    catch
+                    {
 
-            if (inputType == TitanOne.InputType.None && outputType == TitanOne.OutputType.None)
-            {
-                throw new Exception("No input or output devices detected");
-            }
-            if (inputType != TitanOne.InputType.None)
-            {
-                Console.WriteLine(String.Format("Input Type is: {0}", InputTypeToString(inputType)));
-            }
-            if (outputType != TitanOne.OutputType.None)
-            {
-                Console.WriteLine(String.Format("Output Type is: {0}", OutputTypeToString(outputType)));
+                    }
+                }
+
             }
         }
 
@@ -125,7 +179,14 @@ namespace TitanWrapper
 
         public bool SetButton(int button, int state)
         {
-            var identifier = ButtonMappings[outputType][button];
+            var identifier = ButtonMappings[titanOneApi.CurrentOutputType][button];
+            titanOneApi.SetOutputIdentifier(identifier, state);
+            return true;
+        }
+
+        public bool SetAxis(int axis, int state)
+        {
+            var identifier = AxisMappings[titanOneApi.CurrentOutputType][axis];
             titanOneApi.SetOutputIdentifier(identifier, state);
             return true;
         }
@@ -145,7 +206,7 @@ namespace TitanWrapper
             int button;
             try
             {
-                button = ReverseButtonMappings[inputType][identifier];
+                button = ReverseButtonMappings[titanOneApi.CurrentInputType][identifier];
             }
             catch
             {
