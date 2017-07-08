@@ -141,9 +141,9 @@ namespace TitanWrapper.TitanOneApi
             return functionsLoaded;
         }
 
-        public bool SetOutputSlot(int slot, int state)
+        public bool SetOutputIdentifier(int identifier, int state)
         {
-            outputState[slot] = (sbyte)state;
+            outputState[identifier] = (sbyte)state;
             Write(outputState);
             return true;
         }
@@ -189,15 +189,15 @@ namespace TitanWrapper.TitanOneApi
                         }
                     }
 
-                    for (byte slot = 0; slot < GCMAPIConstants.Input; slot++)
+                    for (byte identifier = 0; identifier < GCMAPIConstants.Input; identifier++)
                     {
-                        sbyte value = report.Input[slot].Value;
+                        sbyte value = report.Input[identifier].Value;
 
-                        if (value != inputState[slot].Value)
+                        if (value != inputState[identifier].Value)
                         {
-                            SlotChanged(slot, value);
+                            IdentifierChanged(identifier, value);
                         }
-                        //Console.WriteLine(String.Format("Index: {0}, Value: {1}", slot, value));
+                        //Console.WriteLine(String.Format("Index: {0}, Value: {1}", identifier, value));
                     }
                 }
                 catch
@@ -211,12 +211,12 @@ namespace TitanWrapper.TitanOneApi
             }
         }
 
-        private void SlotChanged(int slot, int value)
+        private void IdentifierChanged(int identifier, int value)
         {
-            inputState[slot].Value = (sbyte)value;
-            callback(slot, value);
+            inputState[identifier].Value = (sbyte)value;
+            callback(identifier, value);
 
-            //Console.WriteLine(String.Format("Slot {0} changed to: {1}", slot, value));
+            //Console.WriteLine(String.Format("Identifier {0} changed to: {1}", identifier, value));
         }
 
         private static T GetFunction<T>(IntPtr hModule, String procName)

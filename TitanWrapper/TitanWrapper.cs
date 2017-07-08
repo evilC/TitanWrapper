@@ -60,7 +60,7 @@ namespace TitanWrapper
 
         public Wrapper()
         {
-            titanOneApi = new TitanOne(new Action<int, int>(SlotChanged));
+            titanOneApi = new TitanOne(new Action<int, int>(IdentifierChanged));
             if (!titanOneApi.Init())
             {
                 throw new Exception("Could not load gcdapi.dll and it's functions");
@@ -125,8 +125,8 @@ namespace TitanWrapper
 
         public bool SetButton(int button, int state)
         {
-            var slot = ButtonMappings[outputType][button];
-            titanOneApi.SetOutputSlot(slot, state);
+            var identifier = ButtonMappings[outputType][button];
+            titanOneApi.SetOutputIdentifier(identifier, state);
             return true;
         }
 
@@ -140,12 +140,12 @@ namespace TitanWrapper
             return true;
         }
 
-        private void SlotChanged(int slot, int value)
+        private void IdentifierChanged(int identifier, int value)
         {
             int button;
             try
             {
-                button = ReverseButtonMappings[inputType][slot];
+                button = ReverseButtonMappings[inputType][identifier];
             }
             catch
             {
@@ -159,7 +159,7 @@ namespace TitanWrapper
                 }
             }
 
-            //Console.WriteLine(String.Format("Slot {0} changed to: {1}", slot, value));
+            //Console.WriteLine(String.Format("Identifier {0} changed to: {1}", identifier, value));
         }
 
 
