@@ -8,9 +8,10 @@ namespace TitanWrapper
 {
     public class Wrapper
     {
-        TitanOneApi.TitanOne titanOneApi;
 
         #region Fields and Properties
+
+        private TitanOneApi.TitanOne titanOneApi;
 
         #region Callbacks
         private Dictionary<int, Dictionary<string, dynamic>> buttonCallbacks = new Dictionary<int, Dictionary<string, dynamic>>();
@@ -103,7 +104,7 @@ namespace TitanWrapper
         #endregion
         #endregion
 
-        #region Public
+        #region Public Methods
 
         #region Constructors and Destructors
         public Wrapper()
@@ -114,7 +115,7 @@ namespace TitanWrapper
                 throw new Exception("Could not load gcdapi.dll and it's functions");
             }
             
-            if (!titanOneApi.IsConnected())
+            if (!titanOneApi.IsConnected)
             {
                 // ToDo: Does not seem to detect cable not plugged in
                 throw new Exception("Could not connect to Titan One device");
@@ -168,7 +169,7 @@ namespace TitanWrapper
 
         #endregion
 
-        #region Private
+        #region Private Methods
 
         #region Input handling
         private void IdentifierChanged(int identifier, int value)

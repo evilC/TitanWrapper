@@ -8,9 +8,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+#region Identifier List
 /*
-Identifier List
-
 0   PS4_PS        PS3_PS        XB1_XBOX   XB360_XBOX   WII_HOME   WII_HOME
 1   PS4_SHARE     PS3_SELECT    XB1_VIEW   XB360_BACK   WII_MINUS  WII_MINUS
 2   PS4_OPTIONS   PS3_START     XB1_MENU   XB360_START  WII_PLUS   WII_PLUS
@@ -41,12 +40,16 @@ Identifier List
 27  PS4_TOUCH                                           WII_ACCNZ
 28  PS4_TOUCHX                                          WII_IRX
 29  PS4_TOUCHY                                          WII_IRY
-
 */
+#endregion
+
 namespace TitanWrapper.TitanOneApi
 {
     public class TitanOne
     {
+        #region Fields and Properties
+
+        #region Input and Output Collections
         public enum InputType
         {
             None,
@@ -62,20 +65,11 @@ namespace TitanWrapper.TitanOneApi
             None, PS3, XB360, PS4, XB1
         }
 
-        private IntPtr hModule;
-        private bool functionsLoaded;
-        dynamic callback;
-        private Thread titanWatcher;
-        bool threadRunning = false;
-
         private InputType inputType = InputType.None;
-        public InputType CurrentInputType { get { return inputType ; } }
+        public InputType CurrentInputType { get { return inputType; } }
 
         private OutputType outputType = OutputType.None;
         public OutputType CurrentOutputType { get { return outputType; } }
-
-        private GCMAPIStatus[] inputState = new GCMAPIStatus[30];
-        private sbyte[] outputState = new sbyte[GCMAPIConstants.Output];
 
         public static readonly Dictionary<OutputType, InputType> outputToInputType = new Dictionary<OutputType, InputType>()
         {
@@ -95,197 +89,35 @@ namespace TitanWrapper.TitanOneApi
             {InputType.XB1, OutputType.XB1 },
             {InputType.WII, OutputType.None },
         };
+        #endregion
 
-        public GCDAPI_Load Load;
-        public GCDAPI_Unload Unload;
-        public GCAPI_IsConnected IsConnected;
-        public GCAPI_GetFWVer GetFWVer;
-        public GCAPI_Read Read;
-        public GCAPI_Write Write;
-        public GCAPI_GetTimeVal GetTimeVal;
-        public GCAPI_CalcPressTime CalcPressTime;
+        #region DLL Module handling
+        public bool IsConnected { get { return _IsConnected(); } }
 
-        public TitanOne(dynamic cb)
-        {
-            callback = cb;
-            titanWatcher = new Thread(TitanWatcher);
-        }
+        private IntPtr hModule;
+        private bool functionsLoaded;
+        private GCDAPI_Load _Load;
+        private GCDAPI_Unload _Unload;
+        private GCAPI_IsConnected _IsConnected;
+        private GCAPI_GetFWVer _GetFWVer;
+        private GCAPI_Read _Read;
+        private GCAPI_Write _Write;
+        private GCAPI_GetTimeVal _GetTimeVal;
+        private GCAPI_CalcPressTime _CalcPressTime;
+        #endregion
 
-        // Destructor, fires on exit
-        ~TitanOne()
-        {
-            if (functionsLoaded)
-            {
-                Unload();
-                Console.WriteLine("Unloaded API");
-            }
-            UnloadDll();
-            functionsLoaded = false;
-            Console.WriteLine("Unloaded DLL");
-        }
+        #region Input / Output States
+        private GCMAPIStatus[] inputState = new GCMAPIStatus[30];
+        private sbyte[] outputState = new sbyte[GCMAPIConstants.Output];
+        #endregion
 
+        #region Input Monitoring
+        dynamic callback;               // The callback that will be fired when input changes state
+        private Thread titanWatcher;    // Thread that watches for input
+        bool threadRunning = false;     // Whether the input monitoring thread is active or not
+        #endregion
 
-        public bool Init()
-        {
-            if (!functionsLoaded)
-            {
-                try
-                {
-                    String Working = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                    hModule = LoadLibrary(Path.Combine(Working, "gcdapi.dll"));
-
-                    if (hModule == IntPtr.Zero)
-                    {
-                        return false;
-                    }
-                    Console.WriteLine("Loaded DLL");
-
-                    Load = GetFunction<GCDAPI_Load>(hModule, "gcdapi_Load");
-                    Console.WriteLine((Load == null ? "Failed to obtain function '" : "Obtained function '") + "GCDAPI_Load" + "'");
-
-                    Unload = GetFunction<GCDAPI_Unload>(hModule, "gcdapi_Unload");
-                    Console.WriteLine((Unload == null ? "Failed to obtain function '" : "Obtained function '") + "GCDAPI_Unload" + "'");
-
-                    IsConnected = GetFunction<GCAPI_IsConnected>(hModule, "gcapi_IsConnected");
-                    Console.WriteLine((IsConnected == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_IsConnected" + "'");
-
-                    GetFWVer = GetFunction<GCAPI_GetFWVer>(hModule, "gcapi_GetFWVer");
-                    Console.WriteLine((GetFWVer == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_GetFWVer" + "'");
-
-                    Read = GetFunction<GCAPI_Read>(hModule, "gcapi_Read");
-                    Console.WriteLine((Read == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_Read" + "'");
-
-                    Write = GetFunction<GCAPI_Write>(hModule, "gcapi_Write");
-                    Console.WriteLine((Write == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_Write" + "'");
-
-                    GetTimeVal = GetFunction<GCAPI_GetTimeVal>(hModule, "gcapi_GetTimeVal");
-                    Console.WriteLine((GetTimeVal == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_GetTimeVal" + "'");
-
-                    CalcPressTime = GetFunction<GCAPI_CalcPressTime>(hModule, "gcapi_CalcPressTime");
-                    Console.WriteLine((CalcPressTime == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_CalcPressTime" + "'");
-
-                    functionsLoaded = Load();
-                    
-                }
-                catch
-                {
-                    functionsLoaded = false;
-                    threadRunning = false;
-                }
-            }
-
-            if (functionsLoaded && !threadRunning)
-            {
-                threadRunning = true;
-                titanWatcher.Start();
-            }
-
-            RefreshControllerTypes();
-
-            return functionsLoaded;
-        }
-
-        public void RefreshControllerTypes()
-        {
-            Stopwatch watch = new Stopwatch();
-            while ((outputType == TitanOne.OutputType.None || inputType == TitanOne.InputType.None) && watch.ElapsedMilliseconds < 3000)
-            {
-                var report = GetReport();
-                inputType = GetInputType();
-                outputType = GetOutputType();
-                Thread.Sleep(10);
-            }
-        }
-
-        public bool SetOutputIdentifier(int identifier, int state)
-        {
-            outputState[identifier] = (sbyte)state;
-            Write(outputState);
-            return true;
-        }
-
-        public GCMAPIReport GetReport()
-        {
-            GCMAPIReport report = new GCMAPIReport();
-            Read(ref report);
-            return report;
-        }
-
-        public InputType GetInputType()
-        {
-            var report = GetReport();
-            return (InputType)report.Controller;
-        }
-
-        public OutputType GetOutputType()
-        {
-            var report = GetReport();
-            return (OutputType)report.Console;
-        }
-
-        public void UnloadDll()
-        {
-            FreeLibrary(hModule);
-        }
-
-        private void TitanWatcher()
-        {
-            GCMAPIReport report = new GCMAPIReport();
-
-            while (threadRunning)
-            {
-                try
-                {
-                    if (!Read(ref report))
-                    {
-                        if (!IsConnected())
-                        {
-                            //break;
-                            throw new Exception();
-                        }
-                    }
-
-                    for (byte identifier = 0; identifier < GCMAPIConstants.Input; identifier++)
-                    {
-                        sbyte value = report.Input[identifier].Value;
-
-                        if (value != inputState[identifier].Value)
-                        {
-                            IdentifierChanged(identifier, value);
-                        }
-                        //Console.WriteLine(String.Format("Index: {0}, Value: {1}", identifier, value));
-                    }
-                }
-                catch
-                {
-                    //break;
-                }
-                finally
-                {
-                    Thread.Sleep(1);
-                }
-            }
-        }
-
-        private void IdentifierChanged(int identifier, int value)
-        {
-            inputState[identifier].Value = (sbyte)value;
-            callback(identifier, value);
-
-            //Console.WriteLine(String.Format("Identifier {0} changed to: {1}", identifier, value));
-        }
-
-        private static T GetFunction<T>(IntPtr hModule, String procName)
-        {
-            try
-            {
-                return (T)(object)Marshal.GetDelegateForFunctionPointer(GetProcAddress(hModule, procName), typeof(T));
-            }
-            catch
-            {
-                return default(T);
-            }
-        }
+        #region API Delegates, Structs etc
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
         private static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)]string lpFileName);
@@ -353,6 +185,205 @@ namespace TitanWrapper.TitanOneApi
         }
 
 #pragma warning restore 0649
+        #endregion
+
+        #endregion
+
+        #region Public  Methods
+
+        #region Consructor + Destructor
+        public TitanOne(dynamic cb)
+        {
+            callback = cb;
+            titanWatcher = new Thread(TitanWatcher);
+        }
+
+        // Destructor, fires on exit
+        ~TitanOne()
+        {
+            if (functionsLoaded)
+            {
+                _Unload();
+                Console.WriteLine("Unloaded API");
+            }
+            UnloadDll();
+            functionsLoaded = false;
+            Console.WriteLine("Unloaded DLL");
+        }
+        #endregion
+
+        #region Initialization and Querying
+        public bool Init()
+        {
+            if (!functionsLoaded)
+            {
+                try
+                {
+                    String Working = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                    hModule = LoadLibrary(Path.Combine(Working, "gcdapi.dll"));
+
+                    if (hModule == IntPtr.Zero)
+                    {
+                        return false;
+                    }
+                    Console.WriteLine("Loaded DLL");
+
+                    _Load = GetFunction<GCDAPI_Load>(hModule, "gcdapi_Load");
+                    Console.WriteLine((_Load == null ? "Failed to obtain function '" : "Obtained function '") + "GCDAPI_Load" + "'");
+
+                    _Unload = GetFunction<GCDAPI_Unload>(hModule, "gcdapi_Unload");
+                    Console.WriteLine((_Unload == null ? "Failed to obtain function '" : "Obtained function '") + "GCDAPI_Unload" + "'");
+
+                    _IsConnected = GetFunction<GCAPI_IsConnected>(hModule, "gcapi_IsConnected");
+                    Console.WriteLine((_IsConnected == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_IsConnected" + "'");
+
+                    _GetFWVer = GetFunction<GCAPI_GetFWVer>(hModule, "gcapi_GetFWVer");
+                    Console.WriteLine((_GetFWVer == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_GetFWVer" + "'");
+
+                    _Read = GetFunction<GCAPI_Read>(hModule, "gcapi_Read");
+                    Console.WriteLine((_Read == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_Read" + "'");
+
+                    _Write = GetFunction<GCAPI_Write>(hModule, "gcapi_Write");
+                    Console.WriteLine((_Write == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_Write" + "'");
+
+                    _GetTimeVal = GetFunction<GCAPI_GetTimeVal>(hModule, "gcapi_GetTimeVal");
+                    Console.WriteLine((_GetTimeVal == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_GetTimeVal" + "'");
+
+                    _CalcPressTime = GetFunction<GCAPI_CalcPressTime>(hModule, "gcapi_CalcPressTime");
+                    Console.WriteLine((_CalcPressTime == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_CalcPressTime" + "'");
+
+                    functionsLoaded = _Load();
+                    
+                }
+                catch
+                {
+                    functionsLoaded = false;
+                    threadRunning = false;
+                }
+            }
+
+            if (functionsLoaded && !threadRunning)
+            {
+                threadRunning = true;
+                titanWatcher.Start();
+            }
+
+            RefreshControllerTypes();
+
+            return functionsLoaded;
+        }
+
+        public void RefreshControllerTypes()
+        {
+            Stopwatch watch = new Stopwatch();
+            while ((outputType == TitanOne.OutputType.None || inputType == TitanOne.InputType.None) && watch.ElapsedMilliseconds < 3000)
+            {
+                var report = GetReport();
+                inputType = GetInputType();
+                outputType = GetOutputType();
+                Thread.Sleep(10);
+            }
+        }
+        #endregion
+
+        #region Output handling
+        public bool SetOutputIdentifier(int identifier, int state)
+        {
+            outputState[identifier] = (sbyte)state;
+            _Write(outputState);
+            return true;
+        }
+        #endregion
+
+        #endregion
+
+        #region Private  Methods
+        private static T GetFunction<T>(IntPtr hModule, String procName)
+        {
+            try
+            {
+                return (T)(object)Marshal.GetDelegateForFunctionPointer(GetProcAddress(hModule, procName), typeof(T));
+            }
+            catch
+            {
+                return default(T);
+            }
+        }
+
+        private GCMAPIReport GetReport()
+        {
+            GCMAPIReport report = new GCMAPIReport();
+            _Read(ref report);
+            return report;
+        }
+
+        private InputType GetInputType()
+        {
+            var report = GetReport();
+            return (InputType)report.Controller;
+        }
+
+        private OutputType GetOutputType()
+        {
+            var report = GetReport();
+            return (OutputType)report.Console;
+        }
+
+        private void UnloadDll()
+        {
+            FreeLibrary(hModule);
+        }
+
+        #region Input handling
+        private void TitanWatcher()
+        {
+            GCMAPIReport report = new GCMAPIReport();
+
+            while (threadRunning)
+            {
+                try
+                {
+                    if (!_Read(ref report))
+                    {
+                        if (!_IsConnected())
+                        {
+                            //break;
+                            throw new Exception();
+                        }
+                    }
+
+                    for (byte identifier = 0; identifier < GCMAPIConstants.Input; identifier++)
+                    {
+                        sbyte value = report.Input[identifier].Value;
+
+                        if (value != inputState[identifier].Value)
+                        {
+                            IdentifierChanged(identifier, value);
+                        }
+                        //Console.WriteLine(String.Format("Index: {0}, Value: {1}", identifier, value));
+                    }
+                }
+                catch
+                {
+                    //break;
+                }
+                finally
+                {
+                    Thread.Sleep(1);
+                }
+            }
+        }
+
+        private void IdentifierChanged(int identifier, int value)
+        {
+            inputState[identifier].Value = (sbyte)value;
+            callback(identifier, value);
+
+            //Console.WriteLine(String.Format("Identifier {0} changed to: {1}", identifier, value));
+        }
+        #endregion
+
+        #endregion
 
     }
 }
