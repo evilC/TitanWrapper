@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TestApp
 {
@@ -11,16 +6,16 @@ namespace TestApp
     {
         static void Main(string[] args)
         {
-            var tw = new TitanWrapper.Wrapper();
+            var titan = new TitanWrapper.Wrapper();
 
-            tw.SubscribeButton(1, new Action<int>((value) => {
+            titan.SubscribeButton(1, new Action<int>((value) => {
                 Console.WriteLine("Button 1 Value: " + value);
-                tw.SetButton(1, value);
+                titan.SetButton(1, value);
             }));
 
-            tw.SubscribeAxis(1, new Action<int>((value) => {
+            titan.SubscribeAxis(1, new Action<int>((value) => {
                 Console.WriteLine("Axis 1 Value: " + value);
-                tw.SetAxis(1, value);
+                titan.SetAxis(1, value);
             }));
         }
     }
