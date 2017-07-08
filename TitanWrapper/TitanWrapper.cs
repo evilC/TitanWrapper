@@ -13,14 +13,13 @@ public class TitanWrapper
     private IntPtr hModule;
     private bool Loaded;
     private Thread titanWatcher;
-    private dynamic _callback;
     private Dictionary<int, Dictionary<string, dynamic>> buttonCallbacks = new Dictionary<int, Dictionary<string, dynamic>>();
 
-    sbyte[] outputState = new sbyte[GCMAPIConstants.Output];
-    OutputType outputType = OutputType.None;
-    InputType inputType = InputType.None;
+    private InputType inputType = InputType.None;
+    private GCMAPIStatus[] inputState = new GCMAPIStatus[30];
 
-    GCMAPIStatus[] inputState = new GCMAPIStatus[30];
+    private OutputType outputType = OutputType.None;
+    private sbyte[] outputState = new sbyte[GCMAPIConstants.Output];
 
     public enum InputType
     {
@@ -228,7 +227,6 @@ public class TitanWrapper
 
     public bool SubscribeButton(int button, dynamic callback, string guid = "0")
     {
-        _callback = callback;
         if (!buttonCallbacks.ContainsKey(button))
         {
             buttonCallbacks[button] = new Dictionary<string, dynamic>();
