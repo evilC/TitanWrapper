@@ -165,6 +165,16 @@ namespace TitanWrapper
             buttonCallbacks[button][guid] = callback;
             return true;
         }
+
+        public bool SubscribeAxis(int axis, dynamic callback, string guid = "0")
+        {
+            if (!axisCallbacks.ContainsKey(axis))
+            {
+                axisCallbacks[axis] = new Dictionary<string, dynamic>();
+            }
+            axisCallbacks[axis][guid] = callback;
+            return true;
+        }
         #endregion
 
         #endregion
@@ -178,18 +188,29 @@ namespace TitanWrapper
             try
             {
                 button = ReverseButtonMappings[titanOneApi.CurrentInputType][identifier];
-            }
-            catch
-            {
-                return;
-            }
-            if (buttonCallbacks.ContainsKey(button))
-            {
-                foreach (var callback in buttonCallbacks[button])
+                if (buttonCallbacks.ContainsKey(button))
                 {
-                    callback.Value(value);
+                    foreach (var callback in buttonCallbacks[button])
+                    {
+                        callback.Value(value);
+                    }
                 }
             }
+            catch { }
+
+            int axis;
+            try
+            {
+                axis = ReverseAxisMappings[titanOneApi.CurrentInputType][identifier];
+                if (axisCallbacks.ContainsKey(axis))
+                {
+                    foreach (var callback in axisCallbacks[axis])
+                    {
+                        callback.Value(value);
+                    }
+                }
+            }
+            catch { }
 
             //Console.WriteLine(String.Format("Identifier {0} changed to: {1}", identifier, value));
         }

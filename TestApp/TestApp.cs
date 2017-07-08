@@ -18,9 +18,10 @@ namespace TestApp
                 tw.SetButton(1, value);
             }));
 
-            tw.SetAxis(1, 100);
-            Thread.Sleep(500);
-            tw.SetAxis(1, 0);
+            tw.SubscribeAxis(1, new Action<int>((value) => {
+                Console.WriteLine("Axis 1 Value: " + value);
+                tw.SetAxis(1, value);
+            }));
         }
     }
 }
