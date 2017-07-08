@@ -5,7 +5,7 @@
 
 ; Instantiate class from C# DLL
 asm := CLR_LoadLibrary("TitanWrapper.dll")
-global titan := asm.CreateInstance("TitanWrapper")
+global titan := asm.CreateInstance("TitanWrapper.Wrapper")
 
 titan.SubscribeButton(1, Func("ButtonEvent"))
 

@@ -11,7 +11,7 @@ namespace TestApp
     {
         static void Main(string[] args)
         {
-            var tw = new TitanWrapper();
+            var tw = new TitanWrapper.Wrapper();
             tw.SubscribeButton(1, new Action<int>((value) => {
                 Console.WriteLine("Button 1 Value: " + value);
                 tw.SetButton(1, value);
