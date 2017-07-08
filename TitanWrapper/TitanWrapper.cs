@@ -53,14 +53,14 @@ namespace TitanWrapper
             },
         };
 
-        public static readonly Dictionary<TitanOneApi.TitanOne.InputType, Dictionary<int, int>> ReverseButtonMappings = new Dictionary<TitanOne.InputType, Dictionary<int, int>>() {
+        public static readonly Dictionary<TitanOne.InputType, Dictionary<int, int>> ReverseButtonMappings = new Dictionary<TitanOne.InputType, Dictionary<int, int>>() {
             { TitanOne.InputType.PS3, new Dictionary<int, int>() },
             { TitanOne.InputType.XB360, new Dictionary<int, int>() },
         };
 
         public Wrapper()
         {
-            titanOneApi = new TitanOneApi.TitanOne(new Action<int, int>(SlotChanged));
+            titanOneApi = new TitanOne(new Action<int, int>(SlotChanged));
             if (!titanOneApi.Init())
             {
                 throw new Exception("Could not load gcdapi.dll and it's functions");
