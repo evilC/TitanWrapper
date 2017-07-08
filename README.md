@@ -2,24 +2,10 @@
 A C# wrapper for the Titan One API, with sample AutoHotkey scripts
 
 ## Usage
-### Setup
-#### C#
-Reference the DLL in your project, then:  
-```
-// Instantiate the class
-var titan = new TitanWrapper.Wrapper();
-```
-#### Autohotkey
-Load the DLL using the include CLR library by Lexikos:
-```
-; Load CLR library that allows us to load C# DLLs
-#include CLR.ahk
-; Instantiate class from C# DLL
-asm := CLR_LoadLibrary("TitanWrapper.dll")
-global titan := asm.CreateInstance("TitanWrapper.Wrapper")
-```
 
 ### Button and Axis Numbers:
+Buttons and axes are assigned numbers, in a manner that tries to remain consistent across devices, and similar to what index the appropriate Windows APIs would identify them as.
+
 | Button Number |    PS3   |   PS4    | XB360 |  XB1  |
 |---------------|----------|----------|-------|-------|
 | 1             | Cross    | Cross    | A     | A     |
@@ -53,6 +39,22 @@ global titan := asm.CreateInstance("TitanWrapper.Wrapper")
 | 12          |     | TouchX |       |     |
 | 13          |     | TouchY |       |     |
 
+### Setup
+#### C#
+Reference the DLL in your project, then:  
+```
+// Instantiate the class
+var titan = new TitanWrapper.Wrapper();
+```
+#### Autohotkey
+Load the DLL using the include CLR library by Lexikos:
+```
+; Load CLR library that allows us to load C# DLLs
+#include CLR.ahk
+; Instantiate class from C# DLL
+asm := CLR_LoadLibrary("TitanWrapper.dll")
+global titan := asm.CreateInstance("TitanWrapper.Wrapper")
+```
 
 ### Setting the state of outputs
 #### C# and Autohotkey
