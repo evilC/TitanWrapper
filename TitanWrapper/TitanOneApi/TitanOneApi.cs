@@ -50,6 +50,20 @@ namespace TitanWrapper.TitanOneApi
             titanWatcher = new Thread(TitanWatcher);
         }
 
+        // Destructor, fires on exit
+        ~TitanOne()
+        {
+            if (functionsLoaded)
+            {
+                Unload();
+                Console.WriteLine("Unloaded API");
+            }
+            UnloadDll();
+            functionsLoaded = false;
+            Console.WriteLine("Unloaded DLL");
+        }
+
+
         public bool Init()
         {
             if (!functionsLoaded)

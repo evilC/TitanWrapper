@@ -10,7 +10,6 @@ namespace TitanWrapper
     {
         TitanOneApi.TitanOne titanOneApi;
 
-        private bool Loaded;
         private Dictionary<int, Dictionary<string, dynamic>> buttonCallbacks = new Dictionary<int, Dictionary<string, dynamic>>();
 
         private TitanOne.InputType inputType = TitanOne.InputType.None;
@@ -158,18 +157,6 @@ namespace TitanWrapper
             }
             buttonCallbacks[button][guid] = callback;
             return true;
-        }
-
-        // Destructor, fires on exit
-        ~Wrapper()
-        {
-            if (Loaded)
-            {
-                titanOneApi.Unload();
-                Console.WriteLine("Unloaded API");
-            }
-            titanOneApi.UnloadDll();
-            Console.WriteLine("Unloaded DLL");
         }
 
         private void SlotChanged(int slot, int value)
