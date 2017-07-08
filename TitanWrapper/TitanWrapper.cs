@@ -17,7 +17,6 @@ namespace TitanWrapper
         private Dictionary<int, Dictionary<string, dynamic>> axisCallbacks = new Dictionary<int, Dictionary<string, dynamic>>();
         #endregion
 
-
         public static readonly Dictionary<TitanOne.OutputType, Dictionary<int, int>> ButtonMappings = new Dictionary<TitanOne.OutputType, Dictionary<int, int>>()
         {
             { TitanOne.OutputType.PS3, new Dictionary<int, int>()
