@@ -32,6 +32,7 @@ namespace TitanWrapper.TitanOneApi
         private Thread titanWatcher;
 
         private GCMAPIStatus[] inputState = new GCMAPIStatus[30];
+        private sbyte[] outputState = new sbyte[TitanOne.GCMAPIConstants.Output];
 
         public GCDAPI_Load Load;
         public GCDAPI_Unload Unload;
@@ -80,6 +81,13 @@ namespace TitanWrapper.TitanOneApi
             CalcPressTime = GetFunction<GCAPI_CalcPressTime>(hModule, "gcapi_CalcPressTime");
             Console.WriteLine((CalcPressTime == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_CalcPressTime" + "'");
 
+            return true;
+        }
+
+        public bool SetOutputSlot(int slot, int state)
+        {
+            outputState[slot] = (sbyte)state;
+            Write(outputState);
             return true;
         }
 

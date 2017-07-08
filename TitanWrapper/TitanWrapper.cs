@@ -14,10 +14,8 @@ namespace TitanWrapper
         private Dictionary<int, Dictionary<string, dynamic>> buttonCallbacks = new Dictionary<int, Dictionary<string, dynamic>>();
 
         private TitanOne.InputType inputType = TitanOne.InputType.None;
-        private TitanOne.GCMAPIStatus[] inputState = new TitanOne.GCMAPIStatus[30];
 
         private TitanOne.OutputType outputType = TitanOne.OutputType.None;
-        private sbyte[] outputState = new sbyte[TitanOne.GCMAPIConstants.Output];
 
         public static readonly Dictionary<TitanOne.OutputType, Dictionary<int, int>> ButtonMappings = new Dictionary<TitanOne.OutputType, Dictionary<int, int>>()
         {
@@ -144,8 +142,7 @@ namespace TitanWrapper
         public bool SetButton(int button, int state)
         {
             var slot = ButtonMappings[outputType][button];
-            outputState[slot] = (sbyte)state;
-            titanOneApi.Write(outputState);
+            titanOneApi.SetOutputSlot(slot, state);
             return true;
         }
 
@@ -173,7 +170,6 @@ namespace TitanWrapper
 
         private void SlotChanged(int slot, int value)
         {
-            inputState[slot].Value = (sbyte)value;
             int button;
             try
             {
