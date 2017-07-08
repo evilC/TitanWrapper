@@ -112,9 +112,9 @@ namespace TitanWrapper.TitanOneApi
         #endregion
 
         #region Input Monitoring
-        dynamic callback;               // The callback that will be fired when input changes state
+        private dynamic callback;               // The callback that will be fired when input changes state
         private Thread titanWatcher;    // Thread that watches for input
-        bool threadRunning = false;     // Whether the input monitoring thread is active or not
+        private bool threadRunning = false;     // Whether the input monitoring thread is active or not
         #endregion
 
         #region API Delegates, Structs etc
@@ -127,51 +127,51 @@ namespace TitanWrapper.TitanOneApi
 
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool FreeLibrary(IntPtr hModule);
+        private static extern bool FreeLibrary(IntPtr hModule);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate bool GCDAPI_Load();
+        private delegate bool GCDAPI_Load();
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void GCDAPI_Unload();
+        private delegate void GCDAPI_Unload();
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate bool GCAPI_IsConnected();
+        private delegate bool GCAPI_IsConnected();
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate ushort GCAPI_GetFWVer();
+        private delegate ushort GCAPI_GetFWVer();
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate ushort GPPAPI_DevicePID();
+        private delegate ushort GPPAPI_DevicePID();
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate bool GCAPI_Read([In, Out] ref GCMAPIReport Report);
+        private delegate bool GCAPI_Read([In, Out] ref GCMAPIReport Report);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate bool GCAPI_Write(sbyte[] Output);
+        private delegate bool GCAPI_Write(sbyte[] Output);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate uint GCAPI_GetTimeVal();
+        private delegate uint GCAPI_GetTimeVal();
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate uint GCAPI_CalcPressTime(uint Button);
+        private delegate uint GCAPI_CalcPressTime(uint Button);
 
 #pragma warning disable 0649
 
-        public struct GCMAPIConstants
+        private struct GCMAPIConstants
         {
             public const int Input = 30;
             public const int Output = 36;
         }
 
-        public struct GCMAPIStatus
+        private struct GCMAPIStatus
         {
             public sbyte Value;
             public sbyte Previous;
             public int Holding;
         }
 
-        public struct GCMAPIReport
+        private struct GCMAPIReport
         {
             public byte Console;
             public byte Controller;

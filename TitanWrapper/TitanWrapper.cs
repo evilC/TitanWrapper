@@ -20,7 +20,7 @@ namespace TitanWrapper
 
         #region Identifier <--> Index Mappings
         #region Buttons
-        public static readonly Dictionary<TitanOne.OutputType, Dictionary<int, int>> ButtonMappings = new Dictionary<TitanOne.OutputType, Dictionary<int, int>>()
+        private static readonly Dictionary<TitanOne.OutputType, Dictionary<int, int>> ButtonMappings = new Dictionary<TitanOne.OutputType, Dictionary<int, int>>()
         {
             { TitanOne.OutputType.PS3, new Dictionary<int, int>()
                 {
@@ -76,7 +76,7 @@ namespace TitanWrapper
             },
         };
 
-        public static readonly Dictionary<TitanOne.InputType, Dictionary<int, int>> ReverseButtonMappings = new Dictionary<TitanOne.InputType, Dictionary<int, int>>() {
+        private static readonly Dictionary<TitanOne.InputType, Dictionary<int, int>> ReverseButtonMappings = new Dictionary<TitanOne.InputType, Dictionary<int, int>>() {
             { TitanOne.InputType.PS3, new Dictionary<int, int>() },
             { TitanOne.InputType.PS4, new Dictionary<int, int>() },
             { TitanOne.InputType.XB360, new Dictionary<int, int>() },
@@ -85,7 +85,7 @@ namespace TitanWrapper
         #endregion
 
         #region Axes
-        public static readonly Dictionary<TitanOne.OutputType, Dictionary<int, int>> AxisMappings = new Dictionary<TitanOne.OutputType, Dictionary<int, int>>()
+        private static readonly Dictionary<TitanOne.OutputType, Dictionary<int, int>> AxisMappings = new Dictionary<TitanOne.OutputType, Dictionary<int, int>>()
         {
             { TitanOne.OutputType.PS3, new Dictionary<int, int>()
                 {
@@ -126,7 +126,7 @@ namespace TitanWrapper
             },
         };
 
-        public static readonly Dictionary<TitanOne.InputType, Dictionary<int, int>> ReverseAxisMappings = new Dictionary<TitanOne.InputType, Dictionary<int, int>>() {
+        private static readonly Dictionary<TitanOne.InputType, Dictionary<int, int>> ReverseAxisMappings = new Dictionary<TitanOne.InputType, Dictionary<int, int>>() {
             { TitanOne.InputType.PS3, new Dictionary<int, int>() },
             { TitanOne.InputType.PS4, new Dictionary<int, int>() },
             { TitanOne.InputType.XB360, new Dictionary<int, int>() },
