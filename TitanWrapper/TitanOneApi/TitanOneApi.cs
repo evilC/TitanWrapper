@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TitanWrapper.TitanOneApi
@@ -27,6 +28,10 @@ namespace TitanWrapper.TitanOneApi
 
         private IntPtr hModule;
         private bool Loaded;
+        dynamic callback;
+        private Thread titanWatcher;
+
+        private GCMAPIStatus[] inputState = new GCMAPIStatus[30];
 
         public GCDAPI_Load Load;
         public GCDAPI_Unload Unload;
@@ -37,24 +42,11 @@ namespace TitanWrapper.TitanOneApi
         public GCAPI_GetTimeVal GetTimeVal;
         public GCAPI_CalcPressTime CalcPressTime;
 
-        //public enum InputType
-        //{
-        //    None,
-        //    PS3 = 0x10,
-        //    XB360 = 0x20,
-        //    WII = 0x30,
-        //    PS4 = 0x40,
-        //    XB1 = 0x50
-        //};
-
-        //public enum OutputType
-        //{
-        //    None, PS3, XB360, PS4, XB1
-        //}
-
-        public TitanOne()
+        public TitanOne(dynamic cb)
         {
-
+            callback = cb;
+            titanWatcher = new Thread(TitanWatcher);
+            titanWatcher.Start();
         }
 
         public bool Init()
@@ -113,6 +105,53 @@ namespace TitanWrapper.TitanOneApi
         public void UnloadDll()
         {
             FreeLibrary(hModule);
+        }
+
+        private void TitanWatcher()
+        {
+            TitanOne.GCMAPIReport report = new TitanOne.GCMAPIReport();
+
+            while (true)
+            {
+                try
+                {
+                    if (!Read(ref report))
+                    {
+                        if (!IsConnected())
+                        {
+                            //break;
+                            throw new Exception();
+                        }
+                    }
+
+                    for (byte slot = 0; slot < TitanOne.GCMAPIConstants.Input; slot++)
+                    {
+                        sbyte value = report.Input[slot].Value;
+
+                        if (value != inputState[slot].Value)
+                        {
+                            SlotChanged(slot, value);
+                        }
+                        //Console.WriteLine(String.Format("Index: {0}, Value: {1}", slot, value));
+                    }
+                }
+                catch
+                {
+                    //break;
+                }
+                finally
+                {
+                    Thread.Sleep(1);
+                }
+            }
+        }
+
+        private void SlotChanged(int slot, int value)
+        {
+            inputState[slot].Value = (sbyte)value;
+            callback(slot, value);
+
+            //Console.WriteLine(String.Format("Slot {0} changed to: {1}", slot, value));
         }
 
         private static T GetFunction<T>(IntPtr hModule, String procName)

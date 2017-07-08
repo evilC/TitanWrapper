@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using TitanWrapper.TitanOneApi;
 
 namespace TitanWrapper
@@ -16,7 +11,6 @@ namespace TitanWrapper
         TitanOneApi.TitanOne titanOneApi;
 
         private bool Loaded;
-        private Thread titanWatcher;
         private Dictionary<int, Dictionary<string, dynamic>> buttonCallbacks = new Dictionary<int, Dictionary<string, dynamic>>();
 
         private TitanOne.InputType inputType = TitanOne.InputType.None;
@@ -88,7 +82,7 @@ namespace TitanWrapper
 
         public Wrapper()
         {
-            titanOneApi = new TitanOneApi.TitanOne();
+            titanOneApi = new TitanOneApi.TitanOne(new Action<int, int>(SlotChanged));
             titanOneApi.Init();
             Loaded = titanOneApi.Load();
 
@@ -129,10 +123,6 @@ namespace TitanWrapper
 
                     Console.WriteLine(String.Format("Input Type is: {0}", InputTypeToString(inputType)));
                     Console.WriteLine(String.Format("Output Type is: {0}", OutputTypeToString(outputType)));
-
-                    titanWatcher = new Thread(TitanWatcher);
-                    titanWatcher.Start();
-
                 }
             }
             else
@@ -179,45 +169,6 @@ namespace TitanWrapper
             }
             titanOneApi.UnloadDll();
             Console.WriteLine("Unloaded DLL");
-        }
-
-        private void TitanWatcher()
-        {
-            TitanOne.GCMAPIReport report = new TitanOne.GCMAPIReport();
-
-            while (true)
-            {
-                try
-                {
-                    if (!titanOneApi.Read(ref report))
-                    {
-                        if (!titanOneApi.IsConnected())
-                        {
-                            //break;
-                            throw new Exception();
-                        }
-                    }
-
-                    for (byte slot = 0; slot < TitanOne.GCMAPIConstants.Input; slot++)
-                    {
-                        sbyte value = report.Input[slot].Value;
-
-                        if (value != inputState[slot].Value)
-                        {
-                            SlotChanged(slot, value);
-                        }
-                        //Console.WriteLine(String.Format("Index: {0}, Value: {1}", slot, value));
-                    }
-                }
-                catch
-                {
-                    //break;
-                }
-                finally
-                {
-                    Thread.Sleep(1);
-                }
-            }
         }
 
         private void SlotChanged(int slot, int value)
