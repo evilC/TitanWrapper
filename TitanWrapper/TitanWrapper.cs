@@ -17,6 +17,8 @@ namespace TitanWrapper
         private Dictionary<int, Dictionary<string, dynamic>> axisCallbacks = new Dictionary<int, Dictionary<string, dynamic>>();
         #endregion
 
+        #region Identifier <--> Index Mappings
+        #region Buttons
         public static readonly Dictionary<TitanOne.OutputType, Dictionary<int, int>> ButtonMappings = new Dictionary<TitanOne.OutputType, Dictionary<int, int>>()
         {
             { TitanOne.OutputType.PS3, new Dictionary<int, int>()
@@ -53,7 +55,9 @@ namespace TitanWrapper
                 }
             },
         };
+        #endregion
 
+        #region Axes
         public static readonly Dictionary<TitanOne.InputType, Dictionary<int, int>> ReverseButtonMappings = new Dictionary<TitanOne.InputType, Dictionary<int, int>>() {
             { TitanOne.InputType.PS3, new Dictionary<int, int>() },
             { TitanOne.InputType.XB360, new Dictionary<int, int>() },
@@ -96,7 +100,12 @@ namespace TitanWrapper
             { TitanOne.InputType.XB360, new Dictionary<int, int>() },
         };
         #endregion
+        #endregion
+        #endregion
 
+        #region Public
+
+        #region Constructors and Destructors
         public Wrapper()
         {
             titanOneApi = new TitanOne(new Action<int, int>(IdentifierChanged));
@@ -129,7 +138,63 @@ namespace TitanWrapper
                 Console.WriteLine(String.Format("Output Type is: {0}", OutputTypeToString(outputType)));
             }
         }
+        #endregion
 
+        #region Input / Output manipulation
+        public bool SetButton(int button, int state)
+        {
+            var identifier = ButtonMappings[titanOneApi.CurrentOutputType][button];
+            titanOneApi.SetOutputIdentifier(identifier, state);
+            return true;
+        }
+
+        public bool SetAxis(int axis, int state)
+        {
+            var identifier = AxisMappings[titanOneApi.CurrentOutputType][axis];
+            titanOneApi.SetOutputIdentifier(identifier, state);
+            return true;
+        }
+
+        public bool SubscribeButton(int button, dynamic callback, string guid = "0")
+        {
+            if (!buttonCallbacks.ContainsKey(button))
+            {
+                buttonCallbacks[button] = new Dictionary<string, dynamic>();
+            }
+            buttonCallbacks[button][guid] = callback;
+            return true;
+        }
+        #endregion
+
+        #endregion
+
+        #region Private
+
+        #region Input handling
+        private void IdentifierChanged(int identifier, int value)
+        {
+            int button;
+            try
+            {
+                button = ReverseButtonMappings[titanOneApi.CurrentInputType][identifier];
+            }
+            catch
+            {
+                return;
+            }
+            if (buttonCallbacks.ContainsKey(button))
+            {
+                foreach (var callback in buttonCallbacks[button])
+                {
+                    callback.Value(value);
+                }
+            }
+
+            //Console.WriteLine(String.Format("Identifier {0} changed to: {1}", identifier, value));
+        }
+        #endregion
+
+        #region Setup
         private void CreateReverseMappings()
         {
             foreach (var type in ButtonMappings)
@@ -165,63 +230,21 @@ namespace TitanWrapper
 
             }
         }
+        #endregion
 
-        public string InputTypeToString(TitanOne.InputType type)
+        #region Debugging
+        private string InputTypeToString(TitanOne.InputType type)
         {
             return Enum.GetName(typeof(TitanOne.InputType), type);
         }
 
-        public string OutputTypeToString(TitanOne.OutputType type)
+        private string OutputTypeToString(TitanOne.OutputType type)
         {
             return Enum.GetName(typeof(TitanOne.OutputType), type);
         }
+        #endregion
 
-        public bool SetButton(int button, int state)
-        {
-            var identifier = ButtonMappings[titanOneApi.CurrentOutputType][button];
-            titanOneApi.SetOutputIdentifier(identifier, state);
-            return true;
-        }
-
-        public bool SetAxis(int axis, int state)
-        {
-            var identifier = AxisMappings[titanOneApi.CurrentOutputType][axis];
-            titanOneApi.SetOutputIdentifier(identifier, state);
-            return true;
-        }
-
-        public bool SubscribeButton(int button, dynamic callback, string guid = "0")
-        {
-            if (!buttonCallbacks.ContainsKey(button))
-            {
-                buttonCallbacks[button] = new Dictionary<string, dynamic>();
-            }
-            buttonCallbacks[button][guid] = callback;
-            return true;
-        }
-
-        private void IdentifierChanged(int identifier, int value)
-        {
-            int button;
-            try
-            {
-                button = ReverseButtonMappings[titanOneApi.CurrentInputType][identifier];
-            }
-            catch
-            {
-                return;
-            }
-            if (buttonCallbacks.ContainsKey(button))
-            {
-                foreach (var callback in buttonCallbacks[button])
-                {
-                    callback.Value(value);
-                }
-            }
-
-            //Console.WriteLine(String.Format("Identifier {0} changed to: {1}", identifier, value));
-        }
-
+        #endregion
 
     }
 
