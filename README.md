@@ -37,6 +37,23 @@ global titan := asm.CreateInstance("TitanWrapper.Wrapper")
 | 13            |   PS     |  PS      |       |       |
 | 14            |          | Touch    |       |       |
 
+| Axis Number | PS3 |  PS4   | XB360 | XB1 |
+|-------------|-----|--------|-------|-----|
+| 1           | LSX | LSX    | LSX   | LSX |
+| 2           | LSY | LSY    | LSY   | LSX |
+| 3           | RSX | RSX    | RSX   | RSX |
+| 4           | RSY | RSY    | RSY   | RSY |
+| 5           | L2  | L2     | LT    | LT  |
+| 6           | R2  | R2     | RT    | RT  |
+| 7           | L2  | L2     | LS    | LS  |
+| 8           | R2  | R2     | RS    | RS  |
+| 9           |     | AccX   |       |     |
+| 10          |     | AccY   |       |     |
+| 11          |     | AccZ   |       |     |
+| 12          |     | TouchX |       |     |
+| 13          |     | TouchY |       |     |
+
+
 ### Setting the state of outputs
 #### C# and Autohotkey
 ```
