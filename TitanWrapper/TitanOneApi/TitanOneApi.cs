@@ -27,9 +27,10 @@ namespace TitanWrapper.TitanOneApi
         }
 
         private IntPtr hModule;
-        private bool Loaded;
+        private bool functionsLoaded;
         dynamic callback;
         private Thread titanWatcher;
+        bool threadRunning = false;
 
         private GCMAPIStatus[] inputState = new GCMAPIStatus[30];
         private sbyte[] outputState = new sbyte[TitanOne.GCMAPIConstants.Output];
@@ -47,41 +48,64 @@ namespace TitanWrapper.TitanOneApi
         {
             callback = cb;
             titanWatcher = new Thread(TitanWatcher);
-            titanWatcher.Start();
         }
 
         public bool Init()
         {
-            String Working = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            hModule = LoadLibrary(Path.Combine(Working, "gcdapi.dll"));
+            if (!functionsLoaded)
+            {
+                try
+                {
+                    String Working = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                    hModule = LoadLibrary(Path.Combine(Working, "gcdapi.dll"));
 
-            Console.WriteLine("Loaded DLL");
+                    if (hModule == IntPtr.Zero)
+                    {
+                        return false;
+                    }
+                    Console.WriteLine("Loaded DLL");
 
-            Load = GetFunction<GCDAPI_Load>(hModule, "gcdapi_Load");
-            Console.WriteLine((Load == null ? "Failed to obtain function '" : "Obtained function '") + "GCDAPI_Load" + "'");
+                    Load = GetFunction<GCDAPI_Load>(hModule, "gcdapi_Load");
+                    Console.WriteLine((Load == null ? "Failed to obtain function '" : "Obtained function '") + "GCDAPI_Load" + "'");
 
-            Unload = GetFunction<GCDAPI_Unload>(hModule, "gcdapi_Unload");
-            Console.WriteLine((Unload == null ? "Failed to obtain function '" : "Obtained function '") + "GCDAPI_Unload" + "'");
+                    Unload = GetFunction<GCDAPI_Unload>(hModule, "gcdapi_Unload");
+                    Console.WriteLine((Unload == null ? "Failed to obtain function '" : "Obtained function '") + "GCDAPI_Unload" + "'");
 
-            IsConnected = GetFunction<GCAPI_IsConnected>(hModule, "gcapi_IsConnected");
-            Console.WriteLine((IsConnected == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_IsConnected" + "'");
+                    IsConnected = GetFunction<GCAPI_IsConnected>(hModule, "gcapi_IsConnected");
+                    Console.WriteLine((IsConnected == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_IsConnected" + "'");
 
-            GetFWVer = GetFunction<GCAPI_GetFWVer>(hModule, "gcapi_GetFWVer");
-            Console.WriteLine((GetFWVer == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_GetFWVer" + "'");
+                    GetFWVer = GetFunction<GCAPI_GetFWVer>(hModule, "gcapi_GetFWVer");
+                    Console.WriteLine((GetFWVer == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_GetFWVer" + "'");
 
-            Read = GetFunction<GCAPI_Read>(hModule, "gcapi_Read");
-            Console.WriteLine((Read == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_Read" + "'");
+                    Read = GetFunction<GCAPI_Read>(hModule, "gcapi_Read");
+                    Console.WriteLine((Read == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_Read" + "'");
 
-            Write = GetFunction<GCAPI_Write>(hModule, "gcapi_Write");
-            Console.WriteLine((Write == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_Write" + "'");
+                    Write = GetFunction<GCAPI_Write>(hModule, "gcapi_Write");
+                    Console.WriteLine((Write == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_Write" + "'");
 
-            GetTimeVal = GetFunction<GCAPI_GetTimeVal>(hModule, "gcapi_GetTimeVal");
-            Console.WriteLine((GetTimeVal == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_GetTimeVal" + "'");
+                    GetTimeVal = GetFunction<GCAPI_GetTimeVal>(hModule, "gcapi_GetTimeVal");
+                    Console.WriteLine((GetTimeVal == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_GetTimeVal" + "'");
 
-            CalcPressTime = GetFunction<GCAPI_CalcPressTime>(hModule, "gcapi_CalcPressTime");
-            Console.WriteLine((CalcPressTime == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_CalcPressTime" + "'");
+                    CalcPressTime = GetFunction<GCAPI_CalcPressTime>(hModule, "gcapi_CalcPressTime");
+                    Console.WriteLine((CalcPressTime == null ? "Failed to obtain function '" : "Obtained function '") + "GCAPI_CalcPressTime" + "'");
 
-            return true;
+                    functionsLoaded = Load();
+                    
+                }
+                catch
+                {
+                    functionsLoaded = false;
+                    threadRunning = false;
+                }
+            }
+
+            if (functionsLoaded && !threadRunning)
+            {
+                threadRunning = true;
+                titanWatcher.Start();
+            }
+
+            return functionsLoaded;
         }
 
         public bool SetOutputSlot(int slot, int state)
@@ -119,7 +143,7 @@ namespace TitanWrapper.TitanOneApi
         {
             TitanOne.GCMAPIReport report = new TitanOne.GCMAPIReport();
 
-            while (true)
+            while (threadRunning)
             {
                 try
                 {

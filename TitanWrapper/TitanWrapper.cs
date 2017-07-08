@@ -81,51 +81,55 @@ namespace TitanWrapper
         public Wrapper()
         {
             titanOneApi = new TitanOneApi.TitanOne(new Action<int, int>(SlotChanged));
-            titanOneApi.Init();
-            Loaded = titanOneApi.Load();
-
-            if (Loaded)
+            if (!titanOneApi.Init())
             {
-                if (!titanOneApi.IsConnected())
+                throw new Exception("Could not load gcdapi.dll and it's functions");
+            }
+            
+            if (!titanOneApi.IsConnected())
+            {
+                // ToDo: Does not seem to detect cable not plugged in
+                throw new Exception("Could not connect to Titan One device");
+            }
+
+            foreach (var type in ButtonMappings)
+            {
+                foreach (var buttonMapping in type.Value)
                 {
-                    Console.WriteLine("Could not connect");
-                }
-                else
-                {
-                    foreach (var type in ButtonMappings)
+                    try
                     {
-                        foreach (var buttonMapping in type.Value)
-                        {
-                            try
-                            {
-                                var iType = outputToInputType[type.Key];
-                                ReverseButtonMappings[iType][buttonMapping.Value] = buttonMapping.Key;
-                            }
-                            catch
-                            {
-
-                            }
-                        }
+                        var iType = outputToInputType[type.Key];
+                        ReverseButtonMappings[iType][buttonMapping.Value] = buttonMapping.Key;
                     }
-
-                    Stopwatch watch = new Stopwatch();
-                    watch.Start();
-                    while ((outputType == TitanOne.OutputType.None || inputType == TitanOne.InputType.None) && watch.ElapsedMilliseconds < 3000)
+                    catch
                     {
-                        var report = titanOneApi.GetReport();
-                        inputType = titanOneApi.GetInputType();
-                        outputType = titanOneApi.GetOutputType();
-                        Thread.Sleep(10);
-                    }
-                    watch.Stop();
 
-                    Console.WriteLine(String.Format("Input Type is: {0}", InputTypeToString(inputType)));
-                    Console.WriteLine(String.Format("Output Type is: {0}", OutputTypeToString(outputType)));
+                    }
                 }
             }
-            else
+
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+            while ((outputType == TitanOne.OutputType.None || inputType == TitanOne.InputType.None) && watch.ElapsedMilliseconds < 3000)
             {
-                Console.WriteLine("GCDAP_Load failed");
+                var report = titanOneApi.GetReport();
+                inputType = titanOneApi.GetInputType();
+                outputType = titanOneApi.GetOutputType();
+                Thread.Sleep(10);
+            }
+            watch.Stop();
+
+            if (inputType == TitanOne.InputType.None && outputType == TitanOne.OutputType.None)
+            {
+                throw new Exception("No input or output devices detected");
+            }
+            if (inputType != TitanOne.InputType.None)
+            {
+                Console.WriteLine(String.Format("Input Type is: {0}", InputTypeToString(inputType)));
+            }
+            if (outputType != TitanOne.OutputType.None)
+            {
+                Console.WriteLine(String.Format("Output Type is: {0}", OutputTypeToString(outputType)));
             }
         }
 
